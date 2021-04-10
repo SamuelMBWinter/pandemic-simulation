@@ -14,27 +14,37 @@ class Polulation:
         self.people = [Person('s') for i in range(N)] # Generates a list of people
         self.size = len(self.people)
     
-   def print_people(self):
+    def print_people(self):
         print(self.people)
 
     def update_day(self):
-
+        to_be_infected = set()
         for person in self.people:
             if person.infection_status == 'i':
+                
                 contacts = np.floor(self.size * random.random() ** 2)
-                print(contacts)
-                for p in random.sample(self.people, self.size):
-                    p.infection_status = 'i'
+                
+                while contacts > 0:
+                    to_be_infected.add(random.randint(0, self.size))
+                    contacts -=1
+
             else:
                 pass
+        for num in to_be_infected:
+            self.people[num].infection_status = 'i'
     
+    def update_n_days(self, n):
+        for i in range(n):
+            self.update_day()
 
-pop = Polulation(5)
-spawn = pop.people[0]
-spawn.infection_status = 'i'
-pop.print_people()
 
-pop.update_day()
+if __name__ == '__main__':
+    pop = Polulation(5) 
+    spawn = pop.people[0]
+    spawn.infection_status = 'i'
+    pop.print_people()
 
-pop.print_people()
+    pop.update_day()
+
+    pop.print_people()
 
