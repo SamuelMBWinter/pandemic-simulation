@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ## Defining constats for the simulation
-T = 0.01    # Transmission chance
+T = 0.015   # Transmission chance
 C = 0.267   # Mean number of contacts
 I = 1       # Initial number of infected people
-D = 10      # infectious days
-
+D = 7       # infectious days
+recovery_period = 40
 death_rate = 0.02 
 
 # Random number generator
@@ -17,7 +17,7 @@ class Person:
     def __init__(self, infection_status='s'):
         self.infection_status = infection_status
         self.days_infected = 0
-    
+        self.days_recovered = 0 
     def update(self):
         if self.infection_status == 'i':
             if self.days_infected >=D:
@@ -30,6 +30,14 @@ class Person:
                     return 2
             else:
                 self.days_infected += 1
+                return 0
+        
+        elif self.infection_status == 'r':
+            if self.days_recovered >= recovery_period:
+                self.infection_status = 's'
+                return 3
+            else:
+                self.days_recovered += 1
                 return 0
         else:
             return 0
@@ -84,6 +92,9 @@ class Population:
             elif state == 2:
                 self.dead += 1
                 self.infected -=1
+            elif state == 3:
+                self.susceptible += 1
+                self.recovered -= 1
             else:
                 pass
         
