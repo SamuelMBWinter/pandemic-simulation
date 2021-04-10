@@ -8,6 +8,8 @@ C = 0.267   # Mean number of contacts
 I = 1       # Initial number of infected people
 D = 10      # infectious days
 
+death_rate = 0.02 
+
 # Random number generator
 rng = np.random.default_rng()
 
@@ -19,9 +21,13 @@ class Person:
     def update(self):
         if self.infection_status == 'i':
             if self.days_infected >=D:
-                self.infection_status = 'r'
-                self.days_infected = 0
-                return 1
+                if rng.random() > death_rate:
+                    self.infection_status = 'r'
+                    self.days_infected = 0
+                    return 1
+                else:
+                    self.infection_status = 'd'
+                    return 2
             else:
                 self.days_infected += 1
                 return 0
@@ -42,7 +48,8 @@ class Population:
         self.susceptible = self.size - I
         self.infected = I
         self.recovered = 0
-    
+        self.dead = 0
+
     def print_people(self):
         print(self.people)
 
@@ -70,13 +77,17 @@ class Population:
                 pass
         
         for person in self.people:
-            if person.update():
+            state = person.update()
+            if state == 1:
                 self.recovered += 1
                 self.infected -= 1
+            elif state == 2:
+                self.dead += 1
+                self.infected -=1
             else:
                 pass
         
-        return self.susceptible, self.infected, self.recovered
+        return self.susceptible, self.infected, self.recovered, self.dead
 
     def update_n_days(self, n):
         ls = []
