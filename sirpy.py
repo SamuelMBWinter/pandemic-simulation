@@ -1,27 +1,24 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-
-## Defining constats for the simulation
-T = 0.015   # Transmission chance
-C = 0.267   # Mean number of contacts
-I = 1       # Initial number of infected people
-D = 7       # infectious days
-recovery_period = 40
-death_rate = 0.02 
+import plotly.graph_objects as go
 
 # Random number generator
 rng = np.random.default_rng()
 
 class Person:
-    def __init__(self, infection_status='s'):
-        self.infection_status = infection_status
+    def __init__(self, transmission_window, recovery_period, death_rate):
+        self.infection_status = 's'
+        self.transmission_window = transmission_window
+        self.recovery_period = recovery_period
+        self.death_rate = death_rate
         self.days_infected = 0
         self.days_recovered = 0 
+
     def update(self):
         if self.infection_status == 'i':
-            if self.days_infected >=D:
-                if rng.random() > death_rate:
+            if self.days_infected >= self.transmission_window:
+                if rng.random() > self.death_rate:
                     self.infection_status = 'r'
                     self.days_infected = 0
                     return 1
@@ -33,8 +30,9 @@ class Person:
                 return 0
         
         elif self.infection_status == 'r':
-            if self.days_recovered >= recovery_period:
+            if self.days_recovered >= self.recovery_period:
                 self.infection_status = 's'
+                self.days_recovered = 0
                 return 3
             else:
                 self.days_recovered += 1
@@ -46,15 +44,35 @@ class Person:
         return f'Person("{self.infection_status}")'
 
 class Population:
-    def __init__(self, N):
-        self.people = [Person('s') for i in range(N)] # Generates a list of people
+    def __init__(self,
+            size, 
+            initial_infections, 
+            contact_mean, 
+            transmission_chance, 
+            transmission_window, 
+            recovery_period, 
+            death_rate
+            ):
+        self.people = [
+                Person(
+                    transmission_window, 
+                    recovery_period, 
+                    death_rate
+                    ) for i in range(size)
+                ] 
+        
         self.size = len(self.people)
-
+        self.contact_mean = contact_mean
+        self.transmission_chance = transmission_chance
+        
+        ###
+        #Fix the beneath code
+        ###
         self.people[0].infection_status = 'i'
         self.people[0].update()
 
-        self.susceptible = self.size - I
-        self.infected = I
+        self.susceptible = self.size - initial_infections
+        self.infected = initial_infections
         self.recovered = 0
         self.dead = 0
 
@@ -66,9 +84,9 @@ class Population:
         to_be_infected = set()
         for person in self.people:
             if person.infection_status == 'i':
-                contacts = rng.poisson(lam=C)
+                contacts = rng.poisson(lam=self.contact_mean)
                 while contacts > 0:
-                    if rng.random() < T:
+                    if rng.random() < self.transmission_chance:
                         to_be_infected.add(rng.integers(0, self.size-1))
                         contacts -=1
                     else:
@@ -106,18 +124,43 @@ class Population:
             ls.append(self.update_day())
         return ls
 
-def get_graph(N=1000, days=100):
+def get_graph(
+        days=100,
+        size=100, 
+        initial_infections=1, 
+        contact_mean=0.267, 
+        transmission_chance=0.015, 
+        transmission_window=7, 
+        recovery_period=40, 
+        death_rate=0.02
+        ):
 
-    pop = Population(N) 
-    data = update_n_days(days)
+    pop = Population(
+            size,
+            initial_infections, 
+            contact_mean, 
+            transmission_chance, 
+            transmission_window, 
+            recovery_period, 
+            death_rate
+            ) 
 
-    days = range(1, len(data)+1)
+    data = pop.update_n_days(days)
 
-    Sus = np.array([day[0] for day in data])
-    Inf = np.array([day[1] for day in data])
-    Rec = np.array([day[2] for day in data])
-    Dea = np.array([day[3] for day in data])
+    days = list(range(1, len(data)+1))
 
-    fig = go.Figure(data=go.Bar(y=Rec))
+    susceptibles = np.array([day[0] for day in data])
+    infections = np.array([day[1] for day in data])
+    recoveries = np.array([day[2] for day in data])
+    deaths = np.array([day[3] for day in data])
+
+    fig = go.Figure(data=[
+        go.Bar(name='Recovered', x=days, y=recoveries, width = 1),
+        go.Bar(name='Suceptible', x=days, y=susceptibles, width = 1),
+        go.Bar(name='Infected', x=days, y=infections, width = 1),
+        go.Bar(name='Deaths', x=days, y=deaths, width = 1),
+        ])
+   
+    fig.update_layout(barmode='stack')
     
     return fig
