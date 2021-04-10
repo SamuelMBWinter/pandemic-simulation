@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 
 ## Defining constats for the simulation
 T = 0.01    # Transmission chance
-C = 4       # Mean number of contacts
+C = 0.267   # Mean number of contacts
 I = 1       # Initial number of infected people
-D = 14      # infectious days
+D = 10      # infectious days
 
 # Random number generator
 rng = np.random.default_rng()
