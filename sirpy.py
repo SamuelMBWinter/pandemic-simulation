@@ -155,9 +155,9 @@ def get_graph(
     deaths = np.array([day[3] for day in data])
 
     fig = go.Figure(data=[
+        go.Bar(name='Infected', x=days, y=infections, width = 1),
         go.Bar(name='Recovered', x=days, y=recoveries, width = 1),
         go.Bar(name='Suceptible', x=days, y=susceptibles, width = 1),
-        go.Bar(name='Infected', x=days, y=infections, width = 1),
         go.Bar(name='Deaths', x=days, y=deaths, width = 1),
         ])
    
